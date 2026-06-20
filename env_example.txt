@@ -1,0 +1,12 @@
+# Copy to .env.local and fill in your values.
+# Never commit .env.local
+
+# App
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Supabase — https://supabase.com/dashboard/project/_/settings/api
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+
+# Server-only — bypasses RLS. Never expose to the client.
+SUPABASE_SERVICE_ROLE_KEY=
