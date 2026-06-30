@@ -60,7 +60,7 @@ export function BriefOutput({ brief }: { brief: GeneratedBrief }) {
               </CardHeader>
               <CardContent className="p-4 pt-0">
                 <ul className="flex flex-wrap gap-1.5">
-                  {page.sections.map((section) => (
+                  {(page.sections ?? []).map((section) => (
                     <li key={section}>
                       <Badge variant="secondary">{section}</Badge>
                     </li>
@@ -98,13 +98,13 @@ export function BriefOutput({ brief }: { brief: GeneratedBrief }) {
           <span className="flex items-center gap-2">
             <span
               className="h-4 w-4 rounded-full border border-border"
-              style={{ backgroundColor: brief.designDirection.primaryColor }}
+              style={{ backgroundColor: brief.designDirection?.primaryColor }}
               aria-hidden="true"
             />
-            {brief.designDirection.primaryColor}
+            {brief.designDirection?.primaryColor}
           </span>
-          <span>{brief.designDirection.mood}</span>
-          <span>{brief.designDirection.typography}</span>
+          <span>{brief.designDirection?.mood}</span>
+          <span>{brief.designDirection?.typography}</span>
         </div>
       </Section>
     </div>

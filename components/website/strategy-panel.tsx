@@ -45,7 +45,7 @@ export function StrategyPanel({ strategy }: { strategy: WebsiteStrategy }) {
         </CardHeader>
         <CardContent>
           <ul className="flex flex-wrap gap-2">
-            {strategy.keyMessages.map((message, i) => (
+            {(strategy.keyMessages ?? []).map((message, i) => (
               <li key={i}>
                 <Badge variant="secondary">{message}</Badge>
               </li>

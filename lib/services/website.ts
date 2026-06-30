@@ -10,24 +10,29 @@ import {
 import { normalizeBrief, isBriefComplete } from "@/lib/services/brief";
 import { err, ok, type Result } from "@/lib/errors";
 import { logger } from "@/lib/logger";
+import { sanitizeWebsite, EMPTY_WEBSITE } from "@/lib/website-sanitize";
 import type { Json, WebsiteVersionRow } from "@/types/database";
-import {
-  isGeneratedWebsite,
-  type GeneratedWebsite,
-  type WebsiteSection,
-} from "@/types/website";
+import type { GeneratedWebsite, WebsiteSection } from "@/types/website";
 
 export type WebsiteVersion = Omit<WebsiteVersionRow, "content"> & {
   content: GeneratedWebsite;
 };
 
 function asVersion(row: WebsiteVersionRow): WebsiteVersion {
-  return { ...row, content: row.content as unknown as GeneratedWebsite };
+  // Snapshots are always sanitized so the revisions UI can never crash on a
+  // malformed historical payload.
+  return { ...row, content: sanitizeWebsite(row.content) ?? EMPTY_WEBSITE };
 }
 
-/** Read the current editable website plan for a project. */
-export function getWebsite(raw: Json | null | undefined): GeneratedWebsite | null {
-  return isGeneratedWebsite(raw) ? (raw as unknown as GeneratedWebsite) : null;
+/**
+ * Read the current editable website plan for a project, sanitized so every
+ * renderer receives a fully-shaped object. Returns null when no website exists
+ * yet (the Studio then shows its empty state).
+ */
+export function getWebsite(
+  raw: Json | null | undefined,
+): GeneratedWebsite | null {
+  return sanitizeWebsite(raw);
 }
 
 async function nextVersion(

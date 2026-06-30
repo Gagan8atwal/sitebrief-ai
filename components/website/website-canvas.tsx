@@ -21,7 +21,7 @@ export function WebsiteCanvas({
           {name}
         </span>
         <nav className="hidden gap-5 text-sm text-slate-600 sm:flex">
-          {navigation.slice(0, 5).map((link) => (
+          {(navigation ?? []).slice(0, 5).map((link) => (
             <span
               key={link.slug}
               className={
@@ -41,7 +41,7 @@ export function WebsiteCanvas({
       </header>
 
       <main>
-        {page.sections.map((section) => (
+        {(page.sections ?? []).map((section) => (
           <SectionRenderer key={section.id} section={section} theme={theme} />
         ))}
       </main>

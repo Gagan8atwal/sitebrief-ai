@@ -35,10 +35,10 @@ export function SitemapPanel({ website }: { website: GeneratedWebsite }) {
             </CardHeader>
             <CardContent>
               <ol className="flex flex-wrap gap-1.5">
-                {page.sections.map((section) => (
+                {(page.sections ?? []).map((section) => (
                   <li key={section.id}>
                     <Badge variant="outline">
-                      {SECTION_TYPE_LABELS[section.type]}
+                      {SECTION_TYPE_LABELS[section.type] ?? section.type}
                     </Badge>
                   </li>
                 ))}

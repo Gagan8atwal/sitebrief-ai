@@ -5,6 +5,7 @@ import {
   generateStructured,
   isAnthropicConfigured,
 } from "@/lib/ai/anthropic";
+import { sanitizeWebsite } from "@/lib/website-sanitize";
 import type { GenOutcome } from "@/lib/ai/types";
 import type { BusinessBrief } from "@/types/domain";
 import {
@@ -314,20 +315,6 @@ function buildWebsiteDeterministic(
   };
 }
 
-function isWebsiteShape(value: unknown): value is GeneratedWebsite {
-  if (!value || typeof value !== "object") return false;
-  const v = value as Partial<GeneratedWebsite>;
-  return (
-    typeof v.name === "string" &&
-    typeof v.strategy === "object" &&
-    v.strategy !== null &&
-    Array.isArray(v.navigation) &&
-    Array.isArray(v.pages) &&
-    v.pages.length > 0 &&
-    v.pages.every((p) => Array.isArray(p?.sections))
-  );
-}
-
 /**
  * Generate a full website plan. Uses Claude Opus 4.8 when configured (streamed,
  * since the JSON is large), otherwise the deterministic engine. Returns the
@@ -354,12 +341,13 @@ export async function generateWebsite(
     prompt: `Design the website for this business brief:\n${JSON.stringify(brief, null, 2)}`,
   });
 
-  if (ai && isWebsiteShape(ai.data)) {
+  const safe = ai ? sanitizeWebsite(ai.data) : null;
+  if (safe) {
     return {
       data: {
-        ...ai.data,
+        ...safe,
         theme: {
-          ...ai.data.theme,
+          ...safe.theme,
           primaryColor: brief.primaryColor,
           tone: brief.tone,
           headingFont: fonts.heading,
@@ -369,9 +357,9 @@ export async function generateWebsite(
       },
       meta: {
         provider: "anthropic",
-        model: ai.model,
-        inputTokens: ai.inputTokens,
-        outputTokens: ai.outputTokens,
+        model: ai!.model,
+        inputTokens: ai!.inputTokens,
+        outputTokens: ai!.outputTokens,
         status: "success",
       },
     };
