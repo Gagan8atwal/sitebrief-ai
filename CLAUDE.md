@@ -49,13 +49,20 @@ called on the client.
   returns a `Result<T>` discriminated union (`lib/errors.ts`) instead of
   throwing. `audit.ts` (`recordAudit` / `emitEvent`) is best-effort: failures
   are logged and swallowed so they never break the primary operation.
-- **AI generation seam**: `lib/ai/generate-brief.ts` is the *single* place the
-  model lives. It currently returns a deterministic, dependency-free
-  `GeneratedBrief` so the full flow (wizard → generate → versions) works with no
-  API key. To go live, swap that function's body for an Anthropic call
-  (`claude-opus-4-8`) returning the same shape — every caller is unchanged.
-  Wizard input (`BusinessBrief`) persists on `projects.brief`; each generation
-  is stored as a `project_versions` row (typed `GenerationVersion`).
+- **AI generation seams**: `lib/ai/generate-brief.ts` and
+  `lib/ai/generate-website.ts` are the *only* places a model lives. Both return
+  deterministic, dependency-free outputs so the full flow works with no API key.
+  To go live, swap each function body for a `claude-opus-4-8` call returning the
+  same shape — every caller is unchanged.
+  - Brief flow: wizard input (`BusinessBrief`) persists on `projects.brief`;
+    each brief generation is a `project_versions` row (`GenerationVersion`).
+  - Website flow (Sprint 3): `generate-website.ts` composes strategy → sitemap →
+    page architecture → copy into a `GeneratedWebsite` (`types/website.ts`),
+    persisted on `projects.website`. The page editor saves edits back there and
+    every generate/save/restore snapshots into `website_versions` (the revision
+    engine). The preview (`components/website/*`) renders sections as
+    self-contained light "website" templates — do not use app dark-theme tokens
+    inside the canvas.
 - **Validation**: zod schemas in `lib/validations/*` are the single source for
   input shapes; Server Actions parse `FormData` through them and return
   `fieldErrors` to the client forms.

@@ -22,6 +22,15 @@ const nextConfig = {
     // Disable it for production builds only; dev keeps fast HMR caching.
     if (!dev) {
       config.cache = false;
+
+      // Opt-in escape hatch for extremely memory-constrained machines
+      // (e.g. < 4 GB RAM). Production/CI builds keep full minification and
+      // source maps; set LOW_MEM_BUILD=1 only to verify the build locally.
+      if (process.env.LOW_MEM_BUILD === "1") {
+        config.optimization.minimize = false;
+        config.devtool = false;
+        config.parallelism = 1;
+      }
     }
     return config;
   },

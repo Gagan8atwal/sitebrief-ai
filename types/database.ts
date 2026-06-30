@@ -53,6 +53,7 @@ export type Database = {
           description: string | null;
           status: Database["public"]["Enums"]["project_status"];
           brief: Json;
+          website: Json;
           last_generated_at: string | null;
           created_at: string;
           updated_at: string;
@@ -65,6 +66,7 @@ export type Database = {
           description?: string | null;
           status?: Database["public"]["Enums"]["project_status"];
           brief?: Json;
+          website?: Json;
           last_generated_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -77,6 +79,7 @@ export type Database = {
           description?: string | null;
           status?: Database["public"]["Enums"]["project_status"];
           brief?: Json;
+          website?: Json;
           last_generated_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -158,6 +161,43 @@ export type Database = {
           },
         ];
       };
+      website_versions: {
+        Row: {
+          id: string;
+          project_id: string;
+          version: number;
+          label: string | null;
+          content: Json;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          version: number;
+          label?: string | null;
+          content?: Json;
+          created_by: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: string;
+          version?: number;
+          label?: string | null;
+          content?: Json;
+          created_by?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "website_versions_project_id_fkey";
+            columns: ["project_id"];
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       audit_log: {
         Row: {
           id: string;
@@ -209,3 +249,5 @@ export type ProjectVersion =
   Database["public"]["Tables"]["project_versions"]["Row"];
 export type EventRow = Database["public"]["Tables"]["events"]["Row"];
 export type AuditLogRow = Database["public"]["Tables"]["audit_log"]["Row"];
+export type WebsiteVersionRow =
+  Database["public"]["Tables"]["website_versions"]["Row"];

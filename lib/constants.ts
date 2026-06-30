@@ -1,7 +1,8 @@
 /** Application-wide constants. Single source of truth for shared values. */
 
 export const APP_NAME = "SiteBrief AI";
-export const APP_DESCRIPTION = "AI Website Agency platform";
+export const APP_DESCRIPTION =
+  "Turn a business brief into a complete, multi-page website — strategy, sitemap, copy, and preview — with AI.";
 
 /** Named application routes. */
 export const ROUTES = {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FileText,
+  Globe,
   LayoutGrid,
   Settings2,
   Sparkles,
@@ -24,15 +25,20 @@ import { BriefWizard } from "@/components/brief/brief-wizard";
 import { GenerationPanel } from "@/components/generation/generation-panel";
 import { VersionsList } from "@/components/generation/versions-list";
 import { ProjectSettings } from "@/components/projects/project-settings";
+import { WebsiteStudio } from "@/components/website/website-studio";
 import type { Project } from "@/types/database";
 import type { BusinessBrief } from "@/types/domain";
+import type { GeneratedWebsite } from "@/types/website";
 import type { GenerationVersion } from "@/lib/services/generation";
+import type { WebsiteVersion } from "@/lib/services/website";
 
 interface ProjectWorkspaceProps {
   project: Project;
   initialBrief: BusinessBrief;
   briefComplete: boolean;
   versions: GenerationVersion[];
+  website: GeneratedWebsite | null;
+  websiteVersions: WebsiteVersion[];
 }
 
 export function ProjectWorkspace({
@@ -40,6 +46,8 @@ export function ProjectWorkspace({
   initialBrief,
   briefComplete,
   versions,
+  website,
+  websiteVersions,
 }: ProjectWorkspaceProps) {
   const router = useRouter();
   const [tab, setTab] = useState("overview");
@@ -62,6 +70,10 @@ export function ProjectWorkspace({
           <Sparkles />
           Generate
         </TabsTrigger>
+        <TabsTrigger value="website">
+          <Globe />
+          Website
+        </TabsTrigger>
         <TabsTrigger value="versions">
           <History />
           Versions
@@ -78,7 +90,7 @@ export function ProjectWorkspace({
       </TabsList>
 
       <TabsContent value="overview">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -140,6 +152,33 @@ export function ProjectWorkspace({
               )}
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Website
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Badge variant={website ? "success" : "secondary"}>
+                {website ? `${website.pages.length} pages` : "Not built"}
+              </Badge>
+              <p className="text-sm text-muted-foreground">
+                {website
+                  ? "Edit pages, preview, and manage revisions."
+                  : "Generate a full multi-page website from your brief."}
+              </p>
+              <Button
+                size="sm"
+                variant={website ? "outline" : "default"}
+                onClick={() => setTab("website")}
+                disabled={!briefComplete}
+              >
+                <Globe />
+                {website ? "Open studio" : "Build website"}
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </TabsContent>
 
@@ -161,6 +200,16 @@ export function ProjectWorkspace({
           briefComplete={briefComplete}
           latest={latest}
           onGenerated={refresh}
+          onEditBrief={() => setTab("brief")}
+        />
+      </TabsContent>
+
+      <TabsContent value="website">
+        <WebsiteStudio
+          projectId={project.id}
+          briefComplete={briefComplete}
+          website={website}
+          versions={websiteVersions}
           onEditBrief={() => setTab("brief")}
         />
       </TabsContent>

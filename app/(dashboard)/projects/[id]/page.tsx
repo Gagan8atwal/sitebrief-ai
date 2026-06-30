@@ -9,6 +9,7 @@ import { requireUser } from "@/lib/auth";
 import { getProject } from "@/lib/services/projects";
 import { isBriefComplete, normalizeBrief } from "@/lib/services/brief";
 import { listGenerations } from "@/lib/services/generation";
+import { getWebsite, listWebsiteVersions } from "@/lib/services/website";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatusBadge } from "@/components/projects/status-badge";
 import { ProjectWorkspace } from "@/components/projects/project-workspace";
@@ -35,6 +36,8 @@ export default async function ProjectDetailPage({
   const brief = normalizeBrief(project.brief);
   const generationsResult = await listGenerations(project.id);
   const versions = generationsResult.ok ? generationsResult.data : [];
+  const website = getWebsite(project.website);
+  const websiteVersions = await listWebsiteVersions(project.id);
 
   return (
     <div className="space-y-8">
@@ -57,6 +60,8 @@ export default async function ProjectDetailPage({
         initialBrief={brief}
         briefComplete={isBriefComplete(brief)}
         versions={versions}
+        website={website}
+        websiteVersions={websiteVersions}
       />
     </div>
   );
