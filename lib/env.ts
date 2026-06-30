@@ -37,7 +37,28 @@ if (!parsedClient.success) {
   );
 }
 
-export const env = parsedClient.data;
+/**
+ * Normalize the Supabase project URL. Supabase clients append `/auth/v1`,
+ * `/rest/v1`, etc. to this base, so it must be the bare project origin. If a
+ * misconfigured env value includes a trailing slash or an accidental
+ * `/rest/v1` | `/auth/v1` suffix (a common copy-paste from the dashboard), the
+ * auth endpoint resolves to `/rest/v1/auth/v1/...` and 404s. Strip it here so
+ * the app is resilient to the exact value provided.
+ */
+function normalizeSupabaseUrl(url: string): string {
+  return url
+    .trim()
+    .replace(/\/+$/, "")
+    .replace(/\/(rest|auth|storage|realtime)\/v1$/i, "")
+    .replace(/\/+$/, "");
+}
+
+export const env = {
+  ...parsedClient.data,
+  NEXT_PUBLIC_SUPABASE_URL: normalizeSupabaseUrl(
+    parsedClient.data.NEXT_PUBLIC_SUPABASE_URL,
+  ),
+};
 
 let cachedServerEnv: z.infer<typeof serverSchema> | null = null;
 
