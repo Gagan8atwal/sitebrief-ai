@@ -52,7 +52,7 @@ export function BriefOutput({ brief }: { brief: GeneratedBrief }) {
 
       <Section icon={FileText} title="Sitemap">
         <div className="grid gap-3 sm:grid-cols-2">
-          {brief.sitemap.map((page) => (
+          {(brief.sitemap ?? []).map((page) => (
             <Card key={page.slug}>
               <CardHeader className="p-4 pb-2">
                 <CardTitle className="text-sm">{page.name}</CardTitle>
@@ -75,7 +75,7 @@ export function BriefOutput({ brief }: { brief: GeneratedBrief }) {
       <div className="grid gap-6 md:grid-cols-2">
         <Section icon={Megaphone} title="Calls to action">
           <ul className="flex flex-wrap gap-1.5">
-            {brief.callsToAction.map((cta) => (
+            {(brief.callsToAction ?? []).map((cta) => (
               <li key={cta}>
                 <Badge>{cta}</Badge>
               </li>
@@ -84,7 +84,7 @@ export function BriefOutput({ brief }: { brief: GeneratedBrief }) {
         </Section>
         <Section icon={Search} title="SEO keywords">
           <ul className="flex flex-wrap gap-1.5">
-            {brief.seoKeywords.map((kw) => (
+            {(brief.seoKeywords ?? []).map((kw) => (
               <li key={kw}>
                 <Badge variant="outline">{kw}</Badge>
               </li>
