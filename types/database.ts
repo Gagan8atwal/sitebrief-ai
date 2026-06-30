@@ -23,6 +23,7 @@ export type Database = {
           email: string;
           full_name: string | null;
           avatar_url: string | null;
+          role: Database["public"]["Enums"]["user_role"];
           created_at: string;
           updated_at: string;
         };
@@ -31,6 +32,7 @@ export type Database = {
           email: string;
           full_name?: string | null;
           avatar_url?: string | null;
+          role?: Database["public"]["Enums"]["user_role"];
           created_at?: string;
           updated_at?: string;
         };
@@ -39,8 +41,69 @@ export type Database = {
           email?: string;
           full_name?: string | null;
           avatar_url?: string | null;
+          role?: Database["public"]["Enums"]["user_role"];
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      app_settings: {
+        Row: {
+          id: boolean;
+          owner_email: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: boolean;
+          owner_email?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: boolean;
+          owner_email?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      ai_usage: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          project_id: string | null;
+          operation: string;
+          provider: string;
+          model: string | null;
+          input_tokens: number;
+          output_tokens: number;
+          status: string;
+          error: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          project_id?: string | null;
+          operation: string;
+          provider?: string;
+          model?: string | null;
+          input_tokens?: number;
+          output_tokens?: number;
+          status?: string;
+          error?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          project_id?: string | null;
+          operation?: string;
+          provider?: string;
+          model?: string | null;
+          input_tokens?: number;
+          output_tokens?: number;
+          status?: string;
+          error?: string | null;
+          created_at?: string;
         };
         Relationships: [];
       };
@@ -233,6 +296,7 @@ export type Database = {
     Functions: Record<never, never>;
     Enums: {
       project_status: "draft" | "active" | "archived";
+      user_role: "owner" | "admin" | "team" | "customer";
     };
     CompositeTypes: Record<never, never>;
   };
@@ -251,3 +315,5 @@ export type EventRow = Database["public"]["Tables"]["events"]["Row"];
 export type AuditLogRow = Database["public"]["Tables"]["audit_log"]["Row"];
 export type WebsiteVersionRow =
   Database["public"]["Tables"]["website_versions"]["Row"];
+export type AiUsageRow = Database["public"]["Tables"]["ai_usage"]["Row"];
+export type UserRole = Database["public"]["Enums"]["user_role"];

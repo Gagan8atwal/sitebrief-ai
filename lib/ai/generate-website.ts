@@ -1,15 +1,21 @@
 import "server-only";
 
 import { slugify } from "@/lib/utils";
+import {
+  generateStructured,
+  isAnthropicConfigured,
+} from "@/lib/ai/anthropic";
+import type { GenOutcome } from "@/lib/ai/types";
 import type { BusinessBrief } from "@/types/domain";
-import type {
-  GeneratedWebsite,
-  NavLink,
-  SectionItem,
-  SectionType,
-  WebsitePage,
-  WebsiteSection,
-  WebsiteStrategy,
+import {
+  SECTION_TYPES,
+  type GeneratedWebsite,
+  type NavLink,
+  type SectionItem,
+  type SectionType,
+  type WebsitePage,
+  type WebsiteSection,
+  type WebsiteStrategy,
 } from "@/types/website";
 
 /**
@@ -272,10 +278,10 @@ export function rewriteSectionCopy(
   return copyForSection(type, brief, strategy, page, variant);
 }
 
-export async function generateWebsite(
+function buildWebsiteDeterministic(
   brief: BusinessBrief,
   options?: { now?: Date },
-): Promise<GeneratedWebsite> {
+): GeneratedWebsite {
   const strategy = buildStrategy(brief);
 
   // Ensure Home leads the sitemap.
@@ -305,5 +311,80 @@ export async function generateWebsite(
       bodyFont: fonts.body,
     },
     generatedAt: (options?.now ?? new Date()).toISOString(),
+  };
+}
+
+function isWebsiteShape(value: unknown): value is GeneratedWebsite {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Partial<GeneratedWebsite>;
+  return (
+    typeof v.name === "string" &&
+    typeof v.strategy === "object" &&
+    v.strategy !== null &&
+    Array.isArray(v.navigation) &&
+    Array.isArray(v.pages) &&
+    v.pages.length > 0 &&
+    v.pages.every((p) => Array.isArray(p?.sections))
+  );
+}
+
+/**
+ * Generate a full website plan. Uses Claude Opus 4.8 when configured (streamed,
+ * since the JSON is large), otherwise the deterministic engine. Returns the
+ * website plus generation provenance.
+ */
+export async function generateWebsite(
+  brief: BusinessBrief,
+  options?: { now?: Date },
+): Promise<GenOutcome<GeneratedWebsite>> {
+  const generatedAt = (options?.now ?? new Date()).toISOString();
+  const fonts = FONT_PAIRS[brief.tone] ?? { heading: "Inter", body: "Inter" };
+
+  const ai = await generateStructured<GeneratedWebsite>({
+    stream: true,
+    maxTokens: 16000,
+    system:
+      "You are a senior web strategist and copywriter. Produce a complete multi-page website plan as JSON with this exact shape: " +
+      "{ name: string, strategy: { positioning: string, audienceInsights: string, contentStrategy: string, conversionStrategy: string, keyMessages: string[] }, " +
+      "navigation: { label: string, slug: string }[], " +
+      "pages: { id: string, name: string, slug: string, purpose: string, isHome: boolean, seo: { title: string, description: string }, " +
+      "sections: { id: string, type: string, heading: string, subheading?: string, body?: string, items?: { title: string, description?: string, meta?: string }[], ctaLabel?: string }[] }[], " +
+      "theme: { primaryColor: string, tone: string, headingFont: string, bodyFont: string } }. " +
+      `Each section "type" MUST be one of: ${SECTION_TYPES.join(", ")}. The first page must have isHome true and slug "home". Fill every section with real, specific marketing copy.`,
+    prompt: `Design the website for this business brief:\n${JSON.stringify(brief, null, 2)}`,
+  });
+
+  if (ai && isWebsiteShape(ai.data)) {
+    return {
+      data: {
+        ...ai.data,
+        theme: {
+          ...ai.data.theme,
+          primaryColor: brief.primaryColor,
+          tone: brief.tone,
+          headingFont: fonts.heading,
+          bodyFont: fonts.body,
+        },
+        generatedAt,
+      },
+      meta: {
+        provider: "anthropic",
+        model: ai.model,
+        inputTokens: ai.inputTokens,
+        outputTokens: ai.outputTokens,
+        status: "success",
+      },
+    };
+  }
+
+  return {
+    data: buildWebsiteDeterministic(brief, { now: new Date(generatedAt) }),
+    meta: {
+      provider: "fallback",
+      model: null,
+      inputTokens: 0,
+      outputTokens: 0,
+      status: isAnthropicConfigured() ? "error" : "fallback",
+    },
   };
 }

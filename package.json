@@ -12,6 +12,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,css,md}\""
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.107.0",
     "@radix-ui/react-alert-dialog": "^1.1.4",
     "@radix-ui/react-avatar": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.4",

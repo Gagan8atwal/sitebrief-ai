@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 
-export function MobileNav() {
+export function MobileNav({ isStaff = false }: { isStaff?: boolean }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -33,7 +33,7 @@ export function MobileNav() {
           {APP_NAME}
         </DialogTitle>
         <div className="mt-4">
-          <SidebarNav onNavigate={() => setOpen(false)} />
+          <SidebarNav isStaff={isStaff} onNavigate={() => setOpen(false)} />
         </div>
       </DialogContent>
     </Dialog>

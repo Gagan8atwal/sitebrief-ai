@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-import { APP_NAME, ROUTES } from "@/lib/constants";
-import { requireUser } from "@/lib/auth";
+import { APP_NAME, ROUTES, STAFF_ROLES } from "@/lib/constants";
+import { requireSession } from "@/lib/auth";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import { MobileNav } from "@/components/dashboard/mobile-nav";
 import { UserNav } from "@/components/dashboard/user-nav";
@@ -11,7 +11,8 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await requireUser();
+  const { user, profile } = await requireSession();
+  const isStaff = STAFF_ROLES.includes(profile.role);
 
   return (
     <div className="flex min-h-screen flex-col lg:flex-row">
@@ -22,13 +23,13 @@ export default async function DashboardLayout({
         >
           {APP_NAME}
         </Link>
-        <SidebarNav />
+        <SidebarNav isStaff={isStaff} />
       </aside>
 
       <div className="flex flex-1 flex-col">
         <header className="flex h-16 items-center justify-between gap-4 border-b border-border px-4 sm:px-6">
           <div className="flex items-center gap-2">
-            <MobileNav />
+            <MobileNav isStaff={isStaff} />
             <Link
               href={ROUTES.dashboard}
               className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground lg:hidden"

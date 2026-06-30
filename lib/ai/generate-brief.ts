@@ -1,6 +1,11 @@
 import "server-only";
 
 import { slugify } from "@/lib/utils";
+import {
+  generateStructured,
+  isAnthropicConfigured,
+} from "@/lib/ai/anthropic";
+import type { GenOutcome } from "@/lib/ai/types";
 import type {
   BusinessBrief,
   GeneratedBrief,
@@ -92,10 +97,10 @@ function ctasFor(brief: BusinessBrief): string[] {
  * Produce a structured brief. Async + a small artificial delay so the UI's
  * generating state is observable and the signature matches a real API call.
  */
-export async function generateBrief(
+function buildBriefDeterministic(
   brief: BusinessBrief,
   options?: { now?: Date },
-): Promise<GeneratedBrief> {
+): GeneratedBrief {
   const sitemap: GeneratedPage[] = brief.pages.map((name) => ({
     name,
     slug: slugify(name) || "page",
@@ -126,5 +131,70 @@ export async function generateBrief(
     },
     generatedAt,
     briefSnapshot: brief,
+  };
+}
+
+function isBriefShape(value: unknown): value is GeneratedBrief {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Partial<GeneratedBrief>;
+  return (
+    typeof v.title === "string" &&
+    typeof v.summary === "string" &&
+    Array.isArray(v.sitemap) &&
+    Array.isArray(v.callsToAction) &&
+    Array.isArray(v.seoKeywords)
+  );
+}
+
+/**
+ * Generate a website brief. Uses Claude Opus 4.8 when configured, otherwise the
+ * deterministic engine. Returns the brief plus generation provenance.
+ */
+export async function generateBrief(
+  brief: BusinessBrief,
+  options?: { now?: Date },
+): Promise<GenOutcome<GeneratedBrief>> {
+  const generatedAt = (options?.now ?? new Date()).toISOString();
+
+  const ai = await generateStructured<GeneratedBrief>({
+    maxTokens: 4000,
+    system:
+      "You are a senior brand strategist. Produce a structured website brief as JSON with this exact shape: " +
+      '{ title: string, summary: string, valueProposition: string, targetAudience: string, ' +
+      "toneGuidelines: string, sitemap: { name: string, slug: string, purpose: string, sections: string[] }[], " +
+      "callsToAction: string[], seoKeywords: string[], designDirection: { primaryColor: string, mood: string, typography: string } }.",
+    prompt: `Create the website brief for this business:\n${JSON.stringify(brief, null, 2)}`,
+  });
+
+  if (ai && isBriefShape(ai.data)) {
+    return {
+      data: {
+        ...ai.data,
+        designDirection: {
+          ...ai.data.designDirection,
+          primaryColor: brief.primaryColor,
+        },
+        generatedAt,
+        briefSnapshot: brief,
+      },
+      meta: {
+        provider: "anthropic",
+        model: ai.model,
+        inputTokens: ai.inputTokens,
+        outputTokens: ai.outputTokens,
+        status: "success",
+      },
+    };
+  }
+
+  return {
+    data: buildBriefDeterministic(brief, { now: new Date(generatedAt) }),
+    meta: {
+      provider: "fallback",
+      model: null,
+      inputTokens: 0,
+      outputTokens: 0,
+      status: isAnthropicConfigured() ? "error" : "fallback",
+    },
   };
 }

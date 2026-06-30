@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { ROUTES } from "@/lib/constants";
+import { ROUTES, roleHome, type Role } from "@/lib/constants";
 import { env } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import { recordAudit } from "@/lib/services/audit";
@@ -42,7 +42,8 @@ export async function loginAction(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data: signIn, error } =
+    await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
     logger.warn("Login failed", { reason: error.message });
@@ -50,7 +51,19 @@ export async function loginAction(
   }
 
   revalidatePath("/", "layout");
-  redirect(ROUTES.dashboard);
+  redirect(await resolveHome(signIn.user?.id));
+}
+
+/** Resolve the post-auth landing route from the user's role. */
+async function resolveHome(userId?: string): Promise<string> {
+  if (!userId) return ROUTES.dashboard;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+  return roleHome((data?.role ?? "customer") as Role);
 }
 
 export async function signupAction(
@@ -93,7 +106,7 @@ export async function signupAction(
   // If email confirmation is disabled, a session exists and we can proceed.
   if (data.session) {
     revalidatePath("/", "layout");
-    redirect(ROUTES.dashboard);
+    redirect(await resolveHome(data.user?.id));
   }
 
   redirect(`${ROUTES.login}?checkEmail=1`);

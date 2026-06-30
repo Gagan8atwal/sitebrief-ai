@@ -15,6 +15,8 @@ export const ROUTES = {
   projects: "/projects",
   newProject: "/projects/new",
   settings: "/settings",
+  billing: "/billing",
+  admin: "/admin",
 } as const;
 
 /** Routes that require an authenticated session. */
@@ -22,7 +24,29 @@ export const PROTECTED_PREFIXES = [
   "/dashboard",
   "/projects",
   "/settings",
+  "/billing",
+  "/admin",
 ] as const;
+
+/** Roles. `owner` is the superuser; `admin` manages customers/projects;
+ *  `team` is internal staff; `customer` is an end user. */
+export const USER_ROLES = ["owner", "admin", "team", "customer"] as const;
+export type Role = (typeof USER_ROLES)[number];
+
+export const ROLE_LABELS: Record<Role, string> = {
+  owner: "Owner",
+  admin: "Admin",
+  team: "Team",
+  customer: "Customer",
+};
+
+/** Roles permitted into the internal admin/owner console. */
+export const STAFF_ROLES: Role[] = ["owner", "admin", "team"];
+
+/** Where a role lands after login. */
+export function roleHome(role: Role): string {
+  return STAFF_ROLES.includes(role) ? ROUTES.admin : ROUTES.dashboard;
+}
 
 /** Routes an authenticated user should be redirected away from. */
 export const AUTH_ROUTES = ["/login", "/signup"] as const;

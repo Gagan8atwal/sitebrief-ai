@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { emitEvent, recordAudit } from "@/lib/services/audit";
+import { recordAiUsage } from "@/lib/services/ai-usage";
 import {
   generateWebsite,
   rewriteSectionCopy,
@@ -127,7 +128,14 @@ export async function generateWebsiteForProject(
 
   let website: GeneratedWebsite;
   try {
-    website = await generateWebsite(brief);
+    const outcome = await generateWebsite(brief);
+    website = outcome.data;
+    await recordAiUsage({
+      userId: ownerId,
+      projectId,
+      operation: "website",
+      meta: outcome.meta,
+    });
   } catch (cause) {
     logger.error("generateWebsite threw", { projectId, error: String(cause) });
     return err("internal", "Website generation failed. Please try again.");

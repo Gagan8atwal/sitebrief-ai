@@ -3,16 +3,31 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { ROUTES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { NAV_ITEMS, isNavItemActive } from "@/components/dashboard/nav-config";
+import {
+  ADMIN_NAV_ITEM,
+  NAV_ITEMS,
+  isNavItemActive,
+} from "@/components/dashboard/nav-config";
 
-export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+interface SidebarNavProps {
+  isStaff?: boolean;
+  onNavigate?: () => void;
+}
+
+export function SidebarNav({ isStaff = false, onNavigate }: SidebarNavProps) {
   const pathname = usePathname();
+  const items = isStaff ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS;
 
   return (
     <nav className="flex flex-col gap-1" aria-label="Primary">
-      {NAV_ITEMS.map((item) => {
-        const active = isNavItemActive(pathname, item.href);
+      {items.map((item) => {
+        // The Console root must not stay highlighted while on a customer route.
+        const active =
+          item.href === ROUTES.admin
+            ? pathname === ROUTES.admin || pathname.startsWith(`${ROUTES.admin}/`)
+            : isNavItemActive(pathname, item.href);
         const Icon = item.icon;
         return (
           <Link

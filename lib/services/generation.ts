@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { emitEvent, recordAudit } from "@/lib/services/audit";
+import { recordAiUsage } from "@/lib/services/ai-usage";
 import { generateBrief } from "@/lib/ai/generate-brief";
 import { normalizeBrief, isBriefComplete } from "@/lib/services/brief";
 import { err, ok, type Result } from "@/lib/errors";
@@ -83,7 +84,14 @@ export async function runGeneration(
 
   let generated: GeneratedBrief;
   try {
-    generated = await generateBrief(brief);
+    const outcome = await generateBrief(brief);
+    generated = outcome.data;
+    await recordAiUsage({
+      userId: ownerId,
+      projectId,
+      operation: "brief",
+      meta: outcome.meta,
+    });
   } catch (error) {
     logger.error("generateBrief threw", { projectId, error: String(error) });
     return err("internal", "Generation failed. Please try again.");
